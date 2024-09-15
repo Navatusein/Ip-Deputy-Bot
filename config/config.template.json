@@ -1,0 +1,55 @@
+{
+  "logger_settings": {
+    "version":1,
+    "root":{
+      "handlers" : ["console", "file"],
+      "level": "DEBUG"
+    },
+    "aiogram.dispatcher":{
+      "handlers" : ["console"],
+      "level": "DEBUG"
+    },
+    "aiogram.event":{
+      "handlers" : ["console"],
+      "level": "DEBUG"
+    },
+    "aiogram.middlewares":{
+      "handlers" : ["console"],
+      "level": "DEBUG"
+    },
+    "aiogram.webhook":{
+      "handlers" : ["console"],
+      "level": "DEBUG"
+    },
+    "handlers":{
+      "console":{
+        "formatter": "default",
+        "class": "logging.StreamHandler",
+        "level": "DEBUG"
+      },
+      "file":{
+        "formatter": "default",
+        "class": "logging.FileHandler",
+        "filename": "logs/log.log",
+        "level": "DEBUG",
+        "mode": "a"
+      }
+    },
+    "formatters":{
+      "default": {
+        "format": "%(asctime)s %(levelname)-.4s (%(filename)s).%(funcName)s(%(lineno)s) %(message)s",
+        "datefmt": "%d-%m-%Y %I:%M:%S"
+      }
+    }
+  },
+  "bot_token": "token",
+  "api_token": "token",
+  "api_url": "https://api-url",
+  "frontend_url": "https://frontend-url",
+  "webhook_url": "https://bot-webhook",
+  "webhook_path": "/bot-webhook",
+  "webhook_secret": "my-secret",
+  "webserver": "0.0.0.0",
+  "port": 7540,
+  "time_zone": "Europe/Kyiv"
+}
