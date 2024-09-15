@@ -2,3 +2,5 @@ aiogram~=3.13.0
 httpx~=0.27.2
 pytz~=2024.2
 aiohttp~=3.10.5
+dataclasses_json~=0.6.7
+Babel==2.16.0
