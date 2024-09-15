@@ -47,6 +47,9 @@ def main() -> None:
     dp.message.middleware(Localization(i18n=i18n))
     dp.message.outer_middleware(Localization(i18n=i18n))
 
+    # Last Activity middleware
+    dp.message.middleware(LastActivity())
+
     # Command handlers
     dp.include_routers(start_command.router, exception_command.router, test_command.router,
                        schedule_commands.router)
