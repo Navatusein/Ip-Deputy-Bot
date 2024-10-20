@@ -87,7 +87,7 @@ def format_couple_string(couple: CoupleData, show_time: bool) -> str:
 
     couple_string += f" ({couple.subject_type})"
 
-    if couple.cabinet is not None:
+    if couple.cabinet:
         couple_string += f" {couple.cabinet} {_('кб.')}"
 
     return f"{couple_string}\n"
