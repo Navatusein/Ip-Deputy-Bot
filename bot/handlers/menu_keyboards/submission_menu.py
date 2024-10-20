@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -139,8 +141,6 @@ async def handler(message: Message, state: FSMContext) -> None:
 
 
 def format_submission_message(config: SubmissionsConfig) -> str:
-    print(config)
-
     students = list(dict.fromkeys([x.student for x in config.submissions]))
 
     if len(students) == 0:
@@ -149,8 +149,8 @@ def format_submission_message(config: SubmissionsConfig) -> str:
     message = _("Список: ")
     message += f"<b>{config.name} ({config.type})</b>\n"
     message += _("Остання чистка списку: ")
-    message += config.cleared_at
-    message += '\n\n<pre>'
+    message += f"<b>{format_date(config.cleared_at)}</b>\n"
+    message += '\n<pre>'
 
     for index, student in enumerate(students):
         student_submissions = list(filter(lambda x: x.student == student, config.submissions))
@@ -161,3 +161,11 @@ def format_submission_message(config: SubmissionsConfig) -> str:
 
     return message
 
+
+def format_date(date_str):
+    try:
+        date_obj = datetime.strptime(date_str, "%m/%d/%Y")
+    except ValueError:
+        date_obj = datetime.strptime(date_str, "%d.%m.%Y")
+
+    return date_obj.strftime("%d.%m.%Y")
