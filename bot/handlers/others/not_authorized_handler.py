@@ -1,17 +1,15 @@
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-
-from bot.filters.is_authorized import IsAuthorized
-from bot.handlers.menu_keyboards.authorize_menu import AuthorizeStatesGroup
-from bot.keyboards.reply import login_menu_keyboard
-
 from aiogram.utils.i18n import gettext as _
 
-router = Router()
+from bot.filters.is_authorized import IsAuthorized
+from bot.keyboards.reply import login_menu_keyboard
+
+router = Router(name="not_authorized")
 
 
 @router.message(~IsAuthorized())
-async def handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(AuthorizeStatesGroup.contact)
-    await message.reply(text=_('Необхідно авторизуватися!'), reply_markup=login_menu_keyboard())
+async def request_authorization(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await message.answer(_("Необхідно авторизуватися!"), reply_markup=login_menu_keyboard())

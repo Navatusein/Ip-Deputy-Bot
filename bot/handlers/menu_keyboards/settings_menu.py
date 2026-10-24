@@ -1,138 +1,110 @@
 from typing import Any
 
-from aiogram import Router, F
+from aiogram import Bot, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.i18n import lazy_gettext as __
+from aiogram.types import Message
+from aiogram.utils.i18n import I18n
 from aiogram.utils.i18n import gettext as _
 
 from bot.filters.is_authorized import IsAuthorized
-from bot.keyboards.reply import back_main_keyboard
-from bot.models.student_settings import StudentSettings
-from bot.services.student_service import StudentService
+from bot.filters.localized_text import LocalizedText
+from bot.i18n import set_chat_commands
+from bot.keyboards.reply import list_keyboard, settings_menu_keyboard
+from bot.models import StudentSettings
+from bot.services.api_client import ApiClient
+from bot.services.settings_cache import SettingsCache
+from bot.states import SettingsStates
 
-router = Router()
+router = Router(name="settings_menu")
+
+LANGUAGE_OPTIONS: tuple[tuple[str, str], ...] = (
+    ("🇺🇦 Українська", "uk"),
+    ("🇷🇺 Русский", "ru"),
+    ("🇬🇧 English", "en"),
+)
 
 
-class SettingsStatesGroup(StatesGroup):
-    language = State()
-    compact_schedule = State()
-    remind_deadlines = State()
+def schedule_format_options() -> tuple[tuple[str, bool], ...]:
+    return (
+        (_("➡️⬅️ Компактний"), True),
+        (_("⬅️➡️ Повноцінний"), False),
+    )
 
 
-@router.message(F.text == __("🇺🇦 Мова"), IsAuthorized())
-async def handler(message: Message, state: FSMContext, cache: dict[str, str]) -> None:
-    settings_data = [
-        {"text": "🇺🇦 Українська", "value": "uk"},
-        {"text": "💩 Русский", "value": "ru"},
-    ]
-    keyboard_buttons = [[KeyboardButton(text=_("↩ Назад"))]]
-    keyboard_buttons += [[KeyboardButton(text=value["text"])] for value in settings_data]
+def find_label(options: tuple[tuple[str, Any], ...], value: Any) -> str:
+    return next((label for label, option in options if option == value), str(value))
 
+
+def find_value(options: tuple[tuple[str, Any], ...], text: str | None) -> tuple[bool, Any]:
+    for label, value in options:
+        if label == text:
+            return True, value
+    return False, None
+
+
+async def show_options(message: Message, state: FSMContext, target_state: Any,
+                       options: tuple[tuple[str, Any], ...], current: Any) -> None:
     await state.clear()
-    await state.set_state(SettingsStatesGroup.language)
-    await state.set_data({"settings_data": settings_data})
-
-    settings: StudentSettings = StudentSettings.from_json(cache[f"student_settings:{message.from_user.id}"])
-    setting = next(value for value in settings_data if value["value"] == settings.language)
-    status_message = _("Поточне значення: {value}").format(value=setting["text"])
-
-    await message.answer(status_message,
-                         reply_markup=ReplyKeyboardMarkup(keyboard=keyboard_buttons, resize_keyboard=True))
+    await state.set_state(target_state)
+    await message.answer(
+        _("Поточне значення: {value}").format(value=find_label(options, current)),
+        reply_markup=list_keyboard([label for label, _value in options], back=True),
+    )
 
 
-@router.message(SettingsStatesGroup.language)
-async def handler(message: Message, state: FSMContext, cache: dict[str, str]) -> None:
-    data = await state.get_data()
-    settings_data: list[dict[str, str]] = data["settings_data"]
-    setting = next((value for value in settings_data if value["text"] == message.text), None)
+async def save_settings(api: ApiClient, settings_cache: SettingsCache, settings: StudentSettings,
+                        **changes: Any) -> StudentSettings:
+    updated = await api.update_settings(settings.model_copy(update=changes))
+    settings_cache.set(updated)
+    return updated
 
-    if setting is None:
+
+@router.message(LocalizedText("🌍 Мова"), IsAuthorized())
+async def show_language_options(message: Message, state: FSMContext, student_settings: StudentSettings) -> None:
+    await show_options(message, state, SettingsStates.language, LANGUAGE_OPTIONS, student_settings.language)
+
+
+@router.message(SettingsStates.language, IsAuthorized())
+async def change_language(message: Message, state: FSMContext, bot: Bot, i18n: I18n, api: ApiClient,
+                          settings_cache: SettingsCache, student_settings: StudentSettings) -> None:
+    found, language = find_value(LANGUAGE_OPTIONS, message.text)
+
+    if not found:
         await message.answer(_("Не коректне введення!"))
         return
 
-    settings: StudentSettings = StudentSettings.from_json(cache[f"student_settings:{message.from_user.id}"])
-    settings.language = setting["value"]
-
-    cache[f"student_settings:{message.from_user.id}"] = StudentService.update_settings(settings).to_json()
-
-    await message.answer(text=_("Значення змінено на: {value}").format(value=setting["text"]))
-
-
-@router.message(F.text == __("🗓 Формат розкладу"), IsAuthorized())
-async def handler(message: Message, state: FSMContext, cache: dict[str, str]) -> None:
-    settings_data = [
-        {"text": "➡️⬅️ Компактний", "value": True},
-        {"text": "⬅️➡️ Повноцінний", "value": False},
-    ]
-    keyboard_buttons = [[KeyboardButton(text=_("↩ Назад"))]]
-    keyboard_buttons += [[KeyboardButton(text=value["text"])] for value in settings_data]
-
+    updated = await save_settings(api, settings_cache, student_settings, language=language)
     await state.clear()
-    await state.set_state(SettingsStatesGroup.compact_schedule)
-    await state.set_data({"settings_data": settings_data})
 
-    settings: StudentSettings = StudentSettings.from_json(cache[f"student_settings:{message.from_user.id}"])
-    setting = next(value for value in settings_data if value["value"] == settings.schedule_compact)
-    status_message = _("Поточне значення: {value}").format(value=setting["text"])
+    with i18n.use_locale(updated.language):
+        await message.answer(
+            _("Значення змінено на: {value}").format(value=find_label(LANGUAGE_OPTIONS, updated.language)),
+            reply_markup=settings_menu_keyboard(),
+        )
 
-    await message.answer(status_message,
-                         reply_markup=ReplyKeyboardMarkup(keyboard=keyboard_buttons, resize_keyboard=True))
+    await set_chat_commands(bot, i18n, message.chat.id, updated.language)
 
 
-@router.message(SettingsStatesGroup.compact_schedule)
-async def handler(message: Message, state: FSMContext, cache: dict[str, str]) -> None:
-    data = await state.get_data()
-    settings_data: list[dict[str, str]] = data["settings_data"]
-    setting = next((value for value in settings_data if value["text"] == message.text), None)
+@router.message(LocalizedText("🗓 Формат розкладу"), IsAuthorized())
+async def show_schedule_format_options(message: Message, state: FSMContext,
+                                       student_settings: StudentSettings) -> None:
+    await show_options(message, state, SettingsStates.schedule_format, schedule_format_options(),
+                       student_settings.schedule_compact)
 
-    if setting is None:
+
+@router.message(SettingsStates.schedule_format, IsAuthorized())
+async def change_schedule_format(message: Message, state: FSMContext, api: ApiClient,
+                                 settings_cache: SettingsCache, student_settings: StudentSettings) -> None:
+    options = schedule_format_options()
+    found, compact = find_value(options, message.text)
+
+    if not found:
         await message.answer(_("Не коректне введення!"))
         return
 
-    settings: StudentSettings = StudentSettings.from_json(cache[f"student_settings:{message.from_user.id}"])
-    settings.schedule_compact = setting["value"]
-
-    cache[f"student_settings:{message.from_user.id}"] = StudentService.update_settings(settings).to_json()
-
-    await message.answer(text=_("Значення змінено на: {value}").format(value=setting["text"]))
-
-
-# @router.message(F.text == __("🔔 Нагадувати дедлайни"), IsAuthorized())
-# async def handler(message: Message, state: FSMContext, cache: dict[str, str]) -> None:
-#     settings_data = [
-#         {"text": "🔔 Нагадувати", "value": True},
-#         {"text": "🔕 Не турбувати", "value": False},
-#     ]
-#     keyboard_buttons = [[KeyboardButton(text=_("↩ Назад"))]]
-#     keyboard_buttons += [[KeyboardButton(text=value["text"])] for value in settings_data]
-#
-#     await state.clear()
-#     await state.set_state(SettingsStatesGroup.remind_deadlines)
-#     await state.set_data({"settings_data": settings_data})
-#
-#     settings: StudentSettings = StudentSettings.from_json(cache[f"student_settings:{message.from_user.id}"])
-#     setting = next(value for value in settings_data if value["value"] == settings.remind_deadlines)
-#     status_message = _("Поточне значення: {value}").format(value=setting["text"])
-#
-#     await message.answer(status_message,
-#                          reply_markup=ReplyKeyboardMarkup(keyboard=keyboard_buttons, resize_keyboard=True))
-
-
-@router.message(SettingsStatesGroup.remind_deadlines)
-async def handler(message: Message, state: FSMContext, cache: dict[str, str]) -> None:
-    data = await state.get_data()
-    settings_data: list[dict[str, str]] = data["settings_data"]
-    setting = next((value for value in settings_data if value["text"] == message.text), None)
-
-    if setting is None:
-        await message.answer(_("Не коректне введення!"))
-        return
-
-    settings: StudentSettings = StudentSettings.from_json(cache[f"student_settings:{message.from_user.id}"])
-    settings.remind_deadlines = setting["value"]
-
-    cache[f"student_settings:{message.from_user.id}"] = StudentService.update_settings(settings).to_json()
-
-    await message.answer(text=_("Значення змінено на: {value}").format(value=setting["text"]))
+    updated = await save_settings(api, settings_cache, student_settings, schedule_compact=compact)
+    await state.clear()
+    await message.answer(
+        _("Значення змінено на: {value}").format(value=find_label(options, updated.schedule_compact)),
+        reply_markup=settings_menu_keyboard(),
+    )

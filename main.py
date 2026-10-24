@@ -1,96 +1,101 @@
-import asyncio
 import logging
 
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.webhook.aiohttp_server import setup_application, SimpleRequestHandler
+from aiogram.enums import ParseMode
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 
-from logging import config
-from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
-from aiogram.types import BotCommand
-from aiogram.utils.i18n import I18n, ConstI18nMiddleware
-
-from bot.config import load_config, Config
-from bot.middlewares.last_activity import LastActivity
+from bot.config import Config, load_config
+from bot.handlers.commands import start_command
+from bot.handlers.menu_keyboards import (
+    authorize_menu,
+    information_menu,
+    main_menu,
+    schedule_menu,
+    settings_menu,
+    submission_menu,
+)
+from bot.handlers.others import exceptions_handler, fallback_handler, not_authorized_handler
+from bot.i18n import create_i18n, setup_bot_commands
+from bot.logging_setup import setup_logging
+from bot.middlewares.last_activity import LastActivityMiddleware
 from bot.middlewares.localization import Localization
-from bot.handlers.commands import start_command, exception_command, test_command, schedule_commands
-from bot.handlers.others import not_authorized_handler, exceptions_handler
-from bot.handlers.menu_keyboards import (authorize_menu, main_manu, schedule_menu, information_menu, settings_menu,
-                                         submission_menu)
+from bot.middlewares.student_settings import StudentSettingsMiddleware
+from bot.services.api_client import ApiClient
+from bot.services.settings_cache import SettingsCache
+
+logger = logging.getLogger(__name__)
 
 
-async def on_startup(bot: Bot, configs) -> None:
-    logging.info("Bot started!")
-
-    await bot.set_webhook(f"{configs.webhook_url}{configs.webhook_path}", secret_token=configs.webhook_secret)
-
-    await bot.set_my_commands(
-        commands=[
-            BotCommand(command="start", description="Показати головне меню"),
-            BotCommand(command="today", description="Отримати розклад на сьогодні"),
-            BotCommand(command="tomorrow", description="Отримати розклад на завтра"),
-            BotCommand(command="this_week", description="Отримати розклад на цей тиждень"),
-            BotCommand(command="next_week", description="Отримати розклад на настурний тиждень"),
-        ]
+async def on_startup(bot: Bot, dispatcher: Dispatcher, config: Config, api: ApiClient) -> None:
+    await api.open()
+    await bot.set_webhook(
+        config.webhook_full_url,
+        secret_token=config.webhook_secret.get_secret_value(),
+        allowed_updates=dispatcher.resolve_used_update_types(),
     )
+    await setup_bot_commands(bot, dispatcher["i18n"])
+    logger.info("Bot started")
+
+
+async def on_shutdown(bot: Bot, api: ApiClient) -> None:
+    await api.close()
+    await bot.session.close()
+    logger.info("Bot stopped")
+
+
+def create_dispatcher(config: Config) -> Dispatcher:
+    i18n = create_i18n()
+    dispatcher = Dispatcher(
+        config=config,
+        i18n=i18n,
+        api=ApiClient(config.api_url, config.api_token.get_secret_value(), config.api_timeout),
+        settings_cache=SettingsCache(),
+    )
+
+    dispatcher.update.outer_middleware(StudentSettingsMiddleware())
+    Localization(i18n=i18n).setup(dispatcher)
+    dispatcher.message.outer_middleware(LastActivityMiddleware())
+
+    dispatcher.include_routers(
+        start_command.router,
+        authorize_menu.router,
+        main_menu.router,
+        schedule_menu.router,
+        information_menu.router,
+        settings_menu.router,
+        submission_menu.router,
+        not_authorized_handler.router,
+        fallback_handler.router,
+        exceptions_handler.router,
+    )
+
+    dispatcher.startup.register(on_startup)
+    dispatcher.shutdown.register(on_shutdown)
+    return dispatcher
 
 
 def main() -> None:
-    # Dispatcher is a root router
-    configs = load_config()
-    dp = Dispatcher()
+    config = load_config()
+    setup_logging(config.log_level, config.log_file)
 
-    i18n = I18n(path="locales", default_locale="uk", domain="default")
-
-    # I18n Localization middleware
-    dp.message.middleware(Localization(i18n=i18n))
-    dp.message.outer_middleware(Localization(i18n=i18n))
-
-    # Last Activity middleware
-    dp.message.middleware(LastActivity())
-
-    # Command handlers
-    dp.include_routers(start_command.router, exception_command.router, test_command.router,
-                       schedule_commands.router)
-
-    # Menu handlers
-    dp.include_routers(authorize_menu.router, main_manu.router, schedule_menu.router, information_menu.router,
-                       settings_menu.router, submission_menu.router)
-
-    # Other handlers
-    dp.include_router(not_authorized_handler.router)
-
-    # Exception handler
-    dp.include_router(exceptions_handler.router)
-
-    # Register startup hook to initialize webhook
-    dp.startup.register(on_startup)
-
-    logging.config.dictConfig(configs.logger_settings)
-
-    bot = Bot(configs.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    app = web.Application()
-
-    dp["configs"] = configs
-
-    webhook_requests_handler = SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
-        secret_token=configs.webhook_secret,
-        cache={},
-        i18n=i18n,
-        configs=configs
+    dispatcher = create_dispatcher(config)
+    bot = Bot(
+        config.bot_token.get_secret_value(),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True),
     )
 
-    webhook_requests_handler.register(app, path=configs.webhook_path)
-    setup_application(app, dp, bot=bot)
+    app = web.Application()
+    SimpleRequestHandler(
+        dispatcher=dispatcher,
+        bot=bot,
+        secret_token=config.webhook_secret.get_secret_value(),
+    ).register(app, path=config.webhook_path)
+    setup_application(app, dispatcher, bot=bot)
 
-    web.run_app(app, host=configs.webserver, port=configs.port)
+    web.run_app(app, host=config.webserver, port=config.port, print=None)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except (KeyboardInterrupt, SystemExit):
-        logging.info("Bot stopped!")
+    main()

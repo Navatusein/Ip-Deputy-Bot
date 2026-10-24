@@ -1,26 +1,34 @@
 import logging
 import uuid
 
-from aiogram import Router, F
+import httpx
+from aiogram import F, Router
 from aiogram.filters import ExceptionTypeFilter
-from aiogram.types import Message, ErrorEvent
+from aiogram.types import ErrorEvent, Message
+from aiogram.utils.i18n import gettext as _
 
-from aiogram.utils.i18n import gettext as _, I18n
-from httpx import ConnectError, ReadTimeout
+from bot.utilities.text import quote
 
-router = Router()
-
-
-# Handler for request timeout to API
-@router.error(ExceptionTypeFilter(ConnectError, ReadTimeout), F.update.message.as_("message"))
-async def error_handler(event: ErrorEvent, message: Message, i18n: I18n):
-    logging.critical("Connection to backend timeout!")
-    await message.answer(i18n.gettext("Упс, не можу під'єднатись до сервера!\nВикликайте фіксиків!"))
+router = Router(name="exceptions")
+logger = logging.getLogger(__name__)
 
 
-# Handler for unhandled exceptions
+@router.error(ExceptionTypeFilter(httpx.TransportError), F.update.message.as_("message"))
+async def handle_api_unavailable(event: ErrorEvent, message: Message) -> None:
+    logger.error("API is unavailable: %s", type(event.exception).__name__)
+    await message.answer(_("Упс, не можу під'єднатись до сервера!\nВикликайте фіксиків!"))
+
+
 @router.error(F.update.message.as_("message"))
-async def error_handler(event: ErrorEvent, message: Message, i18n: I18n):
-    code = uuid.uuid4().hex[:10].lower()
-    logging.critical("[%s] Unhandled error: %s",code, event.exception, exc_info=True)
-    await message.answer(i18n.gettext("Упс, щось пішло не так.\nКод помилки: <code>{code}</code>").format(code=code))
+async def handle_unexpected_error(event: ErrorEvent, message: Message) -> None:
+    code = uuid.uuid4().hex[:10]
+    logger.error("[%s] Unhandled error: %s", code, event.exception, exc_info=event.exception)
+    await message.answer(
+        _("Упс, щось пішло не так.\nКод помилки: {code}").format(code=f"<code>{quote(code)}</code>")
+    )
+
+
+@router.error()
+async def log_unexpected_error(event: ErrorEvent) -> None:
+    logger.error("Unhandled error in update %s: %s", event.update.update_id, event.exception,
+                 exc_info=event.exception)

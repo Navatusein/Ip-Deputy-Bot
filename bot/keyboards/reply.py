@@ -1,95 +1,75 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from collections.abc import Iterable
+
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.i18n import gettext as _
 
 
-def back_keyboard() -> ReplyKeyboardMarkup:
+def _markup(rows: list[list[str]]) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("↩ Назад"))],
-        ],
-        resize_keyboard=True
+        keyboard=[[KeyboardButton(text=text) for text in row] for row in rows],
+        resize_keyboard=True,
     )
 
 
-def main_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("📋 Головне меню"))],
-        ],
-        resize_keyboard=True
-    )
+def list_keyboard(items: Iterable[str], *, main_menu: bool = False, back: bool = False) -> ReplyKeyboardMarkup:
+    rows: list[list[str]] = []
+
+    if main_menu:
+        rows.append([_("📋 Головне меню")])
+
+    if back:
+        rows.append([_("↩ Назад")])
+
+    rows.extend([item] for item in items)
+    return _markup(rows)
+
 
 def back_main_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("📋 Головне меню"))],
-            [KeyboardButton(text=_("↩ Назад"))],
-        ],
-        resize_keyboard=True
-    )
+    return _markup([[_("📋 Головне меню")], [_("↩ Назад")]])
 
 
 def login_menu_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_('🔐 Авторизуватися'), request_contact=True)]
-        ],
-        resize_keyboard=True
+        keyboard=[[KeyboardButton(text=_("🔐 Авторизуватися"), request_contact=True)]],
+        resize_keyboard=True,
     )
 
 
 def main_menu_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("🗓 Розклад")), KeyboardButton(text=_("🧾 Захист робіт"))],
-            [KeyboardButton(text=_("🗒 Інформація"))],
-            # [KeyboardButton(text=_("☎️ Зв'язок")), KeyboardButton(text=_("🗒 Інформація"))],
-            [KeyboardButton(text=_("⚙ Налаштування"))]
-        ],
-        resize_keyboard=True
-    )
+    return _markup([
+        [_("🗓 Розклад"), _("🧾 Захист робіт")],
+        [_("🗒 Інформація")],
+        [_("⚙ Налаштування")],
+    ])
 
 
 def schedule_menu_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("📋 Головне меню"))],
-            [KeyboardButton(text=_("🕐 Сьогодні")), KeyboardButton(text=_("🕑 Завтра"))],
-            [KeyboardButton(text=_("🕐 Цей тиждень")), KeyboardButton(text=_("🕑 Наступний тиждень"))],
-        ],
-        resize_keyboard=True
-    )
+    return _markup([
+        [_("📋 Головне меню")],
+        [_("🕐 Сьогодні"), _("🕑 Завтра")],
+        [_("🕐 Цей тиждень"), _("🕑 Наступний тиждень")],
+    ])
 
 
 def information_menu_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("📋 Головне меню"))],
-            [KeyboardButton(text=_("🧑‍🎓 Студенти")), KeyboardButton(text=_("🧑🏻‍🏫 Викладачі"))],
-            [KeyboardButton(text=_("📖 Предмети")), KeyboardButton(text=_("🌐 Посилання"))],
-        ],
-        resize_keyboard=True
-    )
+    return _markup([
+        [_("📋 Головне меню")],
+        [_("🧑‍🎓 Студенти"), _("🧑🏻‍🏫 Викладачі")],
+        [_("📖 Предмети"), _("🌐 Посилання")],
+    ])
 
 
 def settings_menu_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("📋 Головне меню"))],
-            # [KeyboardButton(text=_("🇺🇦 Мова"))],
-            [KeyboardButton(text=_("🗓 Формат розкладу"))],
-            # [KeyboardButton(text=_("🔔 Нагадувати дедлайни"))],
-        ],
-        resize_keyboard=True
-    )
+    return _markup([
+        [_("📋 Головне меню")],
+        [_("🌍 Мова")],
+        [_("🗓 Формат розкладу")],
+    ])
 
 
 def submission_menu_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=_("📋 Головне меню"))],
-            [KeyboardButton(text=_("➕ Записатись")), KeyboardButton(text=_("🧾 Мої записи"))],
-            [KeyboardButton(text=_("🗳 Отримати список"))],
-        ],
-        resize_keyboard=True
-    )
+    return _markup([
+        [_("📋 Головне меню")],
+        [_("➕ Записатись"), _("🧾 Мої записи")],
+        [_("🗳 Отримати список")],
+    ])
