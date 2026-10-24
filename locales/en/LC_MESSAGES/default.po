@@ -1,0 +1,245 @@
+# English translations for Ip-Deputy-Bot.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Ip-Deputy-Bot
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Ip-Deputy-Bot 2.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-24 13:10+0300\n"
+"PO-Revision-Date: 2026-10-24 13:10+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "<b>Час пар:</b>"
+msgstr "<b>Class times:</b>"
+
+#, python-brace-format
+msgid "<b>📅 Розклад на завтра — {weekday}, {date}:</b>"
+msgstr "<b>📅 Tomorrow's schedule — {weekday}, {date}:</b>"
+
+msgid "<b>📅 Розклад на наступний тиждень:</b>"
+msgstr "<b>📅 Next week's schedule:</b>"
+
+#, python-brace-format
+msgid "<b>📅 Розклад на сьогодні — {weekday}, {date}:</b>"
+msgstr "<b>📅 Today's schedule — {weekday}, {date}:</b>"
+
+msgid "<b>📅 Розклад на цей тиждень:</b>"
+msgstr "<b>📅 This week's schedule:</b>"
+
+#, python-brace-format
+msgid "{cabinet} кб."
+msgstr "room {cabinet}"
+
+msgid "Авторизація виконана успішно!"
+msgstr "You have successfully signed in!"
+
+#, python-brace-format
+msgid ""
+"Вас немає у базі даних!\n"
+"Напишіть @Navatusein, код помилки: {code}"
+msgstr ""
+"You are not in the database!\n"
+"Please message @Navatusein, error code: {code}"
+
+msgid "Відкрити інтерфейс"
+msgstr "Open interface"
+
+#, python-brace-format
+msgid "День народження: {value}"
+msgstr "Birthday: {value}"
+
+#, python-brace-format
+msgid "Значення змінено на: {value}"
+msgstr "Value changed to: {value}"
+
+#, python-brace-format
+msgid "Коротка назва: {value}"
+msgstr "Short name: {value}"
+
+#, python-brace-format
+msgid "Кількість лабораторних днів: {value}"
+msgstr "Laboratory days: {value}"
+
+#, python-brace-format
+msgid "Кількість лекційних днів: {value}"
+msgstr "Lecture days: {value}"
+
+#, python-brace-format
+msgid "Кількість практичних днів: {value}"
+msgstr "Practice days: {value}"
+
+msgid "На захист ніхто не записався"
+msgstr "Nobody has signed up yet"
+
+msgid "Натисніть на кнопку щоб відкрити інтерфейс 👇"
+msgstr "Tap the button to open the interface 👇"
+
+msgid "Не коректне введення!"
+msgstr "Invalid input!"
+
+msgid "Не розумію 🤔 Скористайтеся меню нижче 👇"
+msgstr "I don't understand 🤔 Please use the menu below 👇"
+
+msgid "Необхідно авторизуватися!"
+msgstr "Please sign in first!"
+
+#, python-brace-format
+msgid "Номер телефону: +{value}"
+msgstr "Phone number: +{value}"
+
+#, python-brace-format
+msgid "Нік в телеграм: {value}"
+msgstr "Telegram username: {value}"
+
+#, python-brace-format
+msgid "Остання чистка списку: <b>{date}</b>"
+msgstr "List last cleared: <b>{date}</b>"
+
+msgid "Показати головне меню"
+msgstr "Show the main menu"
+
+#, python-brace-format
+msgid "Поточне значення: {value}"
+msgstr "Current value: {value}"
+
+#, python-brace-format
+msgid "Пошта: {value}"
+msgstr "Email: {value}"
+
+#, python-brace-format
+msgid "Підгрупа: {value}"
+msgstr "Subgroup: {value}"
+
+msgid "Розклад на завтра"
+msgstr "Tomorrow's schedule"
+
+msgid "Розклад на наступний тиждень"
+msgstr "Next week's schedule"
+
+msgid "Розклад на сьогодні"
+msgstr "Today's schedule"
+
+msgid "Розклад на цей тиждень"
+msgstr "This week's schedule"
+
+#, python-brace-format
+msgid "Список: <b>{name} ({type})</b>"
+msgstr "List: <b>{name} ({type})</b>"
+
+msgid ""
+"Упс, не можу під'єднатись до сервера!\n"
+"Викликайте фіксиків!"
+msgstr ""
+"Oops, I can't reach the server!\n"
+"Call the fixers!"
+
+#, python-brace-format
+msgid ""
+"Упс, щось пішло не так.\n"
+"Код помилки: {code}"
+msgstr ""
+"Oops, something went wrong.\n"
+"Error code: {code}"
+
+msgid "Усі підгрупи"
+msgstr "All subgroups"
+
+#, python-brace-format
+msgid "Фітовська пошта: {value}"
+msgstr "FIT email: {value}"
+
+msgid "Це не ваш контакт!"
+msgstr "This is not your contact!"
+
+msgid ""
+"Цей номер телефону вже прив'язаний до іншого Telegram-акаунта.\n"
+"Якщо це помилка, напишіть @Navatusein."
+msgstr ""
+"This phone number is already linked to another Telegram account.\n"
+"If this is a mistake, please message @Navatusein."
+
+msgid "↩ Назад"
+msgstr "↩ Back"
+
+msgid "⚙ Налаштування"
+msgstr "⚙ Settings"
+
+msgid "⚠️ Нестандартний час:"
+msgstr "⚠️ Non-standard time:"
+
+msgid "➕ Записатись"
+msgstr "➕ Sign up"
+
+msgid "➡️⬅️ Компактний"
+msgstr "➡️⬅️ Compact"
+
+msgid "⬅️➡️ Повноцінний"
+msgstr "⬅️➡️ Full"
+
+msgid "🌍 Мова"
+msgstr "🌍 Language"
+
+msgid "🌐 Посилання"
+msgstr "🌐 Links"
+
+msgid "📋 Головне меню"
+msgstr "📋 Main menu"
+
+msgid "📖 Предмети"
+msgstr "📖 Subjects"
+
+msgid "🔐 Авторизуватися"
+msgstr "🔐 Sign in"
+
+msgid "🕐 Сьогодні"
+msgstr "🕐 Today"
+
+msgid "🕐 Цей тиждень"
+msgstr "🕐 This week"
+
+msgid "🕑 Завтра"
+msgstr "🕑 Tomorrow"
+
+msgid "🕑 Наступний тиждень"
+msgstr "🕑 Next week"
+
+msgid "🗒 Інформація"
+msgstr "🗒 Information"
+
+msgid "🗓 Розклад"
+msgstr "🗓 Schedule"
+
+msgid "🗓 Формат розкладу"
+msgstr "🗓 Schedule format"
+
+msgid "🗳 Отримати список"
+msgstr "🗳 Get the list"
+
+msgid "🚷 <i>Пари у іншої підгрупи:</i>"
+msgstr "🚷 <i>Other subgroup's classes:</i>"
+
+msgid "🛌 Пар немає, відпочивай!"
+msgstr "🛌 No classes, have a rest!"
+
+msgid "🧑‍🎓 Студенти"
+msgstr "🧑‍🎓 Students"
+
+msgid "🧑🏻‍🏫 Викладачі"
+msgstr "🧑🏻‍🏫 Teachers"
+
+msgid "🧾 Захист робіт"
+msgstr "🧾 Submissions"
+
+msgid "🧾 Мої записи"
+msgstr "🧾 My sign-ups"
+
