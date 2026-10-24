@@ -1,22 +1,18 @@
-from typing import Dict, Any
+from typing import Any
 
 from aiogram.types import TelegramObject, User
 from aiogram.utils.i18n import I18nMiddleware
 
-from bot.models.student_settings import StudentSettings
+from bot.i18n import SUPPORTED_LOCALES, locale_from_telegram
+from bot.models import StudentSettings
 
 
 class Localization(I18nMiddleware):
     async def get_locale(self, event: TelegramObject, data: dict[str, Any]) -> str:
-        user: User = data["event_from_user"]
-        cache: Dict[str, str] = data["cache"]
+        settings: StudentSettings | None = data.get("student_settings")
 
-        # Try to get user settings from cache
-        json = cache.get(f"student_settings:{user.id}")
-
-        # If user settings is none it means that user is not authorized
-        if json is not None:
-            settings: StudentSettings = StudentSettings.from_json(json)
+        if settings is not None and settings.language in SUPPORTED_LOCALES:
             return settings.language
 
-        return "uk"
+        user: User | None = data.get("event_from_user")
+        return locale_from_telegram(user.language_code if user else None)
