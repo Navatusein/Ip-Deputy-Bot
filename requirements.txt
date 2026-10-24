@@ -1,6 +1,7 @@
-aiogram~=3.13.0
-httpx~=0.27.2
-pytz~=2024.2
-aiohttp~=3.10.5
-dataclasses_json~=0.6.7
-Babel==2.16.0
+aiogram~=3.31.0
+aiohttp~=3.14.5
+httpx~=0.28.1
+pydantic-settings~=2.16.1
+cachetools~=7.2.4
+Babel~=2.18.0
+tzdata>=2026.5
